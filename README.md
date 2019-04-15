@@ -51,17 +51,15 @@ include_once __DIR__.'/vendor/autoload.php';
 
 
 
-//Iterate all values in a table with label indexes from table definition
+//Iterate all values in a table with label indexes from table definition and use alias `someTableName` instead of object_{id}
 
 (new \knack\Client(array(
   "id"=>"XXXXXXXXXXXXXXXXXXXXXXXX",
   "key"=>"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 )))
 
-  ->defineTableObjectName('someTableName', 16)
-  ->createCachedTableDefinitionIfNotExists('someTableName')
-  ->useCachedTableDefinition('someTableName')
-  
+  ->useNamedTableDefinitionForObject('someTableName', 16)
+
   ->iterateRecords('someTableName', function(/*array*/$record, $i){
 
       print_r($record); //array(knackid=>string, label1=>value ... label1=>value ...)

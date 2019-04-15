@@ -18,8 +18,18 @@ class Client {
 		$this->credentials=$credentials;
 	}
 
+	public function useNamedTableDefinitionForObject($name, $id){
+		
+		return $this
+			->defineTableObjectName($name, $id)
+			->createCachedTableDefinitionIfNotExists($name)
+			->useCachedTableDefinition($name);
 
-	public function defineTableObjectName($name, $id){
+
+	}
+
+
+	protected function defineTableObjectName($name, $id){
 		$this->tableNames[$name]=$id;
 		return $this;
 	}
@@ -69,7 +79,7 @@ class Client {
 
 	}
 
-	public function createCachedTableDefinitionIfNotExists($name, $file=null){
+	protected function createCachedTableDefinitionIfNotExists($name, $file=null){
 		if(is_null($file)){
 			 $file=$this->getCacheDir().'/cache-'.$name.'-table.json';
 		}
@@ -91,7 +101,7 @@ class Client {
 		return $this;
 	}
 
-	public function useCachedTableDefinition($name, $file=null){
+	protected function useCachedTableDefinition($name, $file=null){
 		if(is_null($file)){
 			 $file=$this->getCacheDir().'/cache-'.$name.'-table.json';
 		}
@@ -193,12 +203,7 @@ class Client {
 	public function getFields($objectNum) {
 
 		$id=$this->objectIdFromName($objectNum);
-
-		
-		
-
-
-		return $this->get("https://api.knackhq.com/v1/objects/object_" . $objectNum."/fields");
+		return $this->get("https://api.knackhq.com/v1/objects/object_" . $id."/fields");
 
 	}
 
