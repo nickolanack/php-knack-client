@@ -5,6 +5,11 @@ namespace knack;
 class Client {
 
 	private $credentials = null;
+	private $tableNames=array();
+	private $tableDefinitions=array();
+	private $cacheDir=__DIR__;
+	private $maxResults=1000;
+	private $resultFormat='raw';
 
 	public function __construct($credentials) {
 		if(is_object($credentials)){
@@ -12,6 +17,95 @@ class Client {
 		}
 		$this->credentials=$credentials;
 	}
+
+
+	public function defineTableObjectName($name, $id){
+		$this->tableNames[$name]=$id;
+		return $this;
+	}
+
+	protected function objectIdFromName($name){
+
+
+
+		if(key_exists($name, $this->tableNames)){
+			return $this->tableNames[$name];
+		}
+		if(is_numeric($name)){
+			return intval($name);
+		}
+
+		if (is_string($name)) {
+			$parts = explode("_", $name);
+			$num=array_pop($parts);
+			if(is_numeric($num)){
+				return intval($num);
+			}
+
+	
+			throw new \Exception('Expected int `object_{id}`: ' . $name);
+		
+		}
+
+		throw new \Exception('Undefined table name: '.$name);
+	}
+
+	protected function formatResultFields($records, $name){
+
+		$id=$this->objectIdFromName($name);
+		$formattedResults= array_map(function($record)use($id){
+
+			$result=array('knackid'=>$record->id);
+			foreach($this->tableDefinitions['object_'.$id]->fields as $fieldDefinition){
+				$result[$fieldDefinition->label]=$record->{$fieldDefinition->key};
+			}
+
+			return (object) $result;
+
+		}, $records);
+
+		//print_r($formattedResults);
+		return $formattedResults;
+
+	}
+
+	public function createCachedTableDefinitionIfNotExists($name, $file=null){
+		if(is_null($file)){
+			 $file=$this->getCacheDir().'/cache-'.$name.'-table.json';
+		}
+		$id=$this->objectIdFromName($name);
+		if(!file_exists($file)){
+			file_put_contents($file, json_encode($this->getFields($id), JSON_PRETTY_PRINT));
+		}
+
+		return $this;
+
+		
+	}
+
+	protected function getCacheDir(){
+		return $this->cacheDir;
+	}
+	public function setCacheDir($dir){
+		$this->cacheDir=$dir;
+		return $this;
+	}
+
+	public function useCachedTableDefinition($name, $file=null){
+		if(is_null($file)){
+			 $file=$this->getCacheDir().'/cache-'.$name.'-table.json';
+		}
+		$id=$this->objectIdFromName($name);
+		if(file_exists($file)){
+
+			$this->tableDefinitions['object_'.$id]=json_decode(file_get_contents($file));
+			return $this;
+		}
+
+		throw new \Exception('Did not find cache file for table: '.$name.' at: '.$file);
+
+	}
+
 
 	public function getObjects() {
 
@@ -26,34 +120,82 @@ class Client {
 		return $this->get("https://api.knackhq.com/v1/pages/scene_1/views/view_1/records");
 
 	}
-
 	public function getRecords($objectNum) {
 
-		if (is_string($objectNum)) {
-			$parts = explode("_", $objectNum);
-			$objectNum = (int) array_pop($parts);
-		}
 
-		if (!is_int($objectNum)) {
-			throw new \Exception('Expected int `object_{id}`: ' . $objectNum);
-		}
+		$list=array();
+		$this->iterateRecords($objectNum, function($record)use(&$list){
+			$list[]=$record;
+		});
+
+		return $list;
+
+	}
+
+	public function iterateRecords($objectNum, $callback) {
+
+		$id=$this->objectIdFromName($objectNum);
+		$index=0;
+
+		
+
+		$results=(object) array(
+			'total_pages' => 1,
+    		'current_page' => 1,
+    		'total_records' => 0
+			//'records'=>array()
+		);
+
+		$maxResults=$this->maxResults; 
+		$resultFormat=$this->resultFormat; 
+
+		while($results->current_page<=$results->total_pages){
 
 
 		
-		return $this->get("https://api.knack.com/v1/objects/object_" . $objectNum . "/records");
+			$urlArgs=array(
+				'page'=>$results->current_page,
+				'format'=>$resultFormat,
+				'rows_per_page'=>$maxResults
+			);
+			$urlArgsString='?'.implode('&', array_map(function($v, $k){
+				return $k.'='.$v;
+			}, $urlArgs, array_keys($urlArgs)));
+			
+			$resultObject= $this->get("https://api.knack.com/v1/objects/object_" . $id . "/records".$urlArgsString);
+
+			//$results->records=array_merge($results->records, $resultObject->records);
+			
+
+			$results->total_pages=$resultObject->total_pages;
+			$results->total_records=$resultObject->total_records;
+			$results->current_page++;
+
+
+			$resultRecords=$resultObject->records;
+			if(key_exists('object_'.$id, $this->tableDefinitions)){
+				$resultRecords= $this->formatResultFields($resultRecords, $objectNum);
+			}
+
+			foreach($resultRecords as $record){
+				$callback($record, $index++);
+			}
+
+		}
+
+
+
+
+		return $this;
 
 	}
 
 	public function getFields($objectNum) {
 
-		if (is_string($objectNum)) {
-			$parts = explode("_", $objectNum);
-			$objectNum = (int) array_pop($parts);
-		}
+		$id=$this->objectIdFromName($objectNum);
 
-		if (!is_int($objectNum)) {
-			throw new \Exception('Expected int `object_{id}`: ' . $objectNum);
-		}
+		
+		
 
 
 		return $this->get("https://api.knackhq.com/v1/objects/object_" . $objectNum."/fields");
@@ -61,6 +203,8 @@ class Client {
 	}
 
 	protected function get($url) {
+
+		echo 'GET: '.$url."\n";
 		$client = new \GuzzleHttp\Client();
 
 		$args = array(
