@@ -5,7 +5,7 @@ a knack client for php
 #Install
 
 ```js
-#in composer.json
+//in composer.json
 {
 
     "repositories":[ 
