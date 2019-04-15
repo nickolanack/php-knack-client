@@ -40,9 +40,9 @@ include_once __DIR__.'/vendor/autoload.php';
 	"id"=>"XXXXXXXXXXXXXXXXXXXXXXXX",
 	"key"=>"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 )))
-  ->iterateRecords('object_16', function(/*array*/$record, $i){
+  ->iterateRecords('object_16', function(/*object*/$record, $i){
 
-      print_r($record); //array(id=>string, field_1=>value ... field_2=>value ...)
+      print_r($record); //stdObject(id:string, field_1:value ... field_2:value ...)
 
   });
 
@@ -51,7 +51,7 @@ include_once __DIR__.'/vendor/autoload.php';
 
 
 
-//Iterate all values in a table with label indexes from table definition and use alias `someTableName` instead of object_{id}
+//Iterate all values in a table with label indexes (from table definition) and using alias `someTableName` instead of object_{id}
 
 (new \knack\Client(array(
   "id"=>"XXXXXXXXXXXXXXXXXXXXXXXX",
@@ -60,9 +60,9 @@ include_once __DIR__.'/vendor/autoload.php';
 
   ->useNamedTableDefinitionForObject('someTableName', 16)
 
-  ->iterateRecords('someTableName', function(/*array*/$record, $i){
+  ->iterateRecords('someTableName', function(/*object*/$record, $i){
 
-      print_r($record); //array(knackid=>string, label1=>value ... label1=>value ...)
+      print_r($record); //stdObject(knackid:string, label1:value ... label1:value ...)
 
   });
 
