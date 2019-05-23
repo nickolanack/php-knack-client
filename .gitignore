@@ -1,3 +1,4 @@
+src/*.json
+credentials.json
 /vendor/
 /test-out
-credentials.json
