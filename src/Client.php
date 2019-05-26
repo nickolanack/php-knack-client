@@ -28,16 +28,20 @@ class Client {
 		return $this;
 	}
 
-	public function hasReachedLimit(){
-
+	public function getApiCallsToday(){
 		$path=$this->cacheDir.'/knack-api-counter-'.date('Y-m-d').'.json';
 		$data=(object)array('count'=>0);
 		if(file_exists($path)){
 			$data=json_decode(file_get_contents($path));
 		}
 
+		return $data->count;
+	}
+
+	public function hasReachedLimit(){
+
 		if($this->limit>0){
-			if($data->count>=$this->limit){
+			if($this->getApiCallsToday()>=$this->limit){
 				return true;
 			}
 		}
