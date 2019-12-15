@@ -32,10 +32,39 @@ composer install
 
 include_once __DIR__.'/vendor/autoload.php';
 
-$client=new \knack\Client(array(
+
+
+//Iterate all values in a table
+
+(new \knack\Client(array(
 	"id"=>"XXXXXXXXXXXXXXXXXXXXXXXX",
 	"key"=>"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-));
+)))
+  ->iterateRecords('object_16', function(/*object*/$record, $i){
+
+      print_r($record); //stdObject(id:string, field_1:value ... field_2:value ...)
+
+  });
+
+
+
+
+
+
+//Iterate all values in a table with label indexes (from table definition) and using alias `someTableName` instead of object_{id}
+
+(new \knack\Client(array(
+  "id"=>"XXXXXXXXXXXXXXXXXXXXXXXX",
+  "key"=>"XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+)))
+
+  ->useNamedTableDefinitionForObject('someTableName', 16)
+
+  ->iterateRecords('someTableName', function(/*object*/$record, $i){
+
+      print_r($record); //stdObject(knackid:string, label1:value ... label1:value ...)
+
+  });
 
 
 ```
