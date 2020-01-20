@@ -494,6 +494,7 @@ class Client {
 		);
 
 		$httpcode = 0;
+		$httperror= '';
 		try {
 			$response = $client->request('GET', $url, $args);
 			$httpcode = $response->getStatusCode();
@@ -502,7 +503,7 @@ class Client {
 			//echo $e->getRequest();
 			if ($e->hasResponse()) {
 				$httpcode = $e->getResponse()->getStatusCode();
-				// echo $e->getResponse()->getBody();
+				$httperror = $e->getResponse()->getBody();
 			}
 		}
 
@@ -512,7 +513,7 @@ class Client {
 				return $this->get($url, $attempts-1);
 			}
 
-			throw new \Exception('Request Error: ' . $httpcode);
+			throw new \Exception('Request Error: ' . $httpcode.' '.$httperror);
 		}
 
 		$result = json_decode($response->getBody());
