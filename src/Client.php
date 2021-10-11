@@ -94,7 +94,7 @@ class Client {
 	protected function objectIdFromName($name){
 
 
-		if(key_exists($name, $this->tableNames)){
+		if(isset($this->tableNames[$name])){
 			return $this->tableNames[$name];
 		}
 		if(is_numeric($name)){
@@ -119,7 +119,7 @@ class Client {
 	protected function formatResultFields($record, $name){
 
 
-		if(key_exists($record->id, $this->updates)){
+		if(isset($this->updates[$record->id])){
 			echo "use stored record: ".$record->id."\n";
 			$record=$this->updates[$record->id];
 		}
@@ -127,13 +127,13 @@ class Client {
 		$id=$this->objectIdFromName($name);
 		
 
-			if(!key_exists('object_'.$id, $this->tableDefinitions)){
+			if(!isset($this->tableDefinitions['object_'.$id])){
 				return $record;
 			}
 
 			$result=array('knackid'=>$record->id);
 			foreach($this->tableDefinitions['object_'.$id]->fields as $fieldDefinition){
-				if(!key_exists($fieldDefinition->key, $record)){
+				if(!isset($record->{$fieldDefinition->key})){
 					throw new \Exception('key does not exist in record'.$fieldDefinition->key.' '.print_r($record, true));
 				}
 
@@ -170,18 +170,18 @@ class Client {
 		$id=$this->objectIdFromName($name);
 		
 
-		if(!key_exists('object_'.$id, $this->tableDefinitions)){
+		if(!isset($this->tableDefinitions['object_'.$id])){
 			return $values;
 		}
 
 		$formattedValues=array();
 		foreach($this->tableDefinitions['object_'.$id]->fields as $fieldDefinition){
 
-			if(key_exists($fieldDefinition->label, $values)){
+			if(isset($values[$fieldDefinition->label])){
 				$formattedValues[$fieldDefinition->key]= $values[$fieldDefinition->label];
 			}
 
-			if(key_exists($fieldDefinition->key, $values)){
+			if(isset($values[$fieldDefinition->key])){
 				$formattedValues[$fieldDefinition->key]= $values[$fieldDefinition->key];
 			}
 		}
@@ -194,7 +194,7 @@ class Client {
 
 	protected function fieldMapFilters($filter, $name){
 
-		if(key_exists('field', $filter)){
+		if(isset($filter['field'])){
 			$filter=array($filter);
 		}
 
@@ -203,7 +203,7 @@ class Client {
 
 
 
-			if(!key_exists('object_'.$id, $this->tableDefinitions)){
+			if(!isset($this->tableDefinitions['object_'.$id])){
 				if($filterItem['field']=='knackid'){
 					$filterItem['field']='id';
 				}
